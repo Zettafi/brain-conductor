@@ -1,0 +1,12 @@
+*.pyc
+*.egg-info
+bc.yaml
+.env
+.idea/
+/.coverage
+/coverage.xml
+/code-quality.json
+/unittest-report-xunit.xml
+/chart/.values.yaml
+.tox
+build/

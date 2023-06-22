@@ -1,0 +1,6 @@
+.*
+**/*.pyc
+**/*.egg-info
+code-quality.json
+coverage.xml
+unittest-report-xunit.xml
