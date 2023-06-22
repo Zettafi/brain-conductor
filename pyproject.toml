@@ -1,0 +1,71 @@
+[project]
+name = "brain-conductor"
+version = "1.0.0"
+description = "COnversational chat syste with expert Personas"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    # AI requirements
+    "openai~=0.27",
+    "tiktoken~=0.4.0",
+    # Web interaction requirements
+    "quart~=0.18",
+    "hypercorn~=0.14",
+    "aiohttp~=3.8.4",
+    "pydantic~=1.10",
+    "email-validator~=2.0",
+    # Other Libraries
+    "backoff~=2.2",
+    "aioboto3~=11.2",
+    # APM
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp-proto-http",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+omit = ["test/*"]
+precision = 2
+
+[tool.black]
+line-length = 88
+
+[tool.mypy]
+python_version = 3.11
+namespace_packages = true
+
+[tool.curlylint.rules]
+# All role attributes must be valid.
+# See https://www.curlylint.org/docs/rules/aria_role.
+aria_role = true
+# Forms cannot be rendered with as_table, as_ul, or as_p
+# See https://www.curlylint.org/docs/rules/django_forms_rendering.
+django_forms_rendering = true
+# The `lang` attribute must be present.
+# See https://www.curlylint.org/docs/rules/html_has_lang.
+html_has_lang = true
+# The `alt` attribute must be present.
+# See https://www.curlylint.org/docs/rules/image_alt.
+image_alt = true
+# Use tabs.
+# See https://www.curlylint.org/docs/rules/indent.
+indent = 4
+# `user-scalable=no` must not be used, and `maximum-scale` should be 2 or above.
+# See https://www.curlylint.org/docs/rules/meta_viewport.
+meta_viewport = true
+# The `autofocus` attribute must not be used.
+# See https://www.curlylint.org/docs/rules/no_autofocus.
+no_autofocus = true
+# Avoid positive `tabindex` values, change the order of elements on the page instead.
+# See https://www.curlylint.org/docs/rules/tabindex_no_positive.
+tabindex_no_positive = true

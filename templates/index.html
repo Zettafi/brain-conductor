@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block content %}
+    <main class="cover">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="box">
+                    <div class="card border-0 m-0 p-0">
+                        <div id="chat_container" class="card border-0 m-0 p-0 position-relative"
+                             style="overflow-y: auto;  height: 66vh;">
+                        </div>
+                    </div>
+                    <div id="typing-indicator">
+                        <span id="typing-indicator-text">Someone is typing</span>
+                        <span id="typing-indicator-animation"></span>
+                    </div>
+                    <div id="connection-issue-indicator">
+                        <span id="connection-issue-indicator-image"></span>
+                        Connection issue detected!
+                    </div>
+                    <div class="w-100 p-0 border-0">
+                        <form id="chat-form" class="m-0 p-0 query-wrapper cf"
+                              onsubmit="return false;"
+                              autocomplete="off">
+                            <div class="input_fields">
+                                <input id="chat-message-input" type="text" name="message" placeholder="Send a message."
+                                       required style="box-shadow: none"
+                                       class="form-control inputField">
+                                <button id="chat-send-button" type="submit" class="send">
+                                    <svg stroke="currentColor" fill="none" stroke-width="2"
+                                         viewBox="0 0 24 24" stroke-linecap="round"
+                                         stroke-linejoin="round" class="h-4 w-4 mr-1"
+                                         height="1em" width="1em"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div id="pageMessages">
+            </div>
+            <div class="circuit_container">
+                <img src="{{ url_for('static', filename='images/circuits.png') }}"
+                     alt="Decorative circuit pattern"/>
+            </div>
+        </div>
+    </main>
+
+{% endblock %}
