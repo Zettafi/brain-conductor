@@ -8,15 +8,12 @@ from json import JSONDecodeError
 from typing import Literal
 from dataclasses import dataclass
 
-import aioboto3
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from pydantic import ValidationError
-from quart import Quart, render_template, websocket, Response, request
-from werkzeug.exceptions import BadRequest
+from quart import Quart, render_template, websocket, Response
 
 from .agents import CryptoAgent, ArtAgent
 from .agents.llm.openai import OpenAI
@@ -35,9 +32,7 @@ from .chat import (
     send_error_message,
 )
 from .inquiries import InquiryManager
-from .models import ContactUs, Feedback
 from .personas import PERSONAS
-from .services import DeliveryError, AWSSESEmailService
 from .utils import TaskManager
 
 LogLevel = Literal[
@@ -68,13 +63,7 @@ def get_quart_app(
     google_measurement_id: str | Literal[False],
     coin_market_cap_api_key: str,
     hugging_face_access_token: str,
-    aws_region: str,
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    sender_email_address: str,
-    contact_us_recipients: list[str],
     promoted_persona_count: int,
-    feedback_recipients: list[str],
     tracing_config: TracingConfig,
 ) -> Quart:
     """
@@ -88,14 +77,8 @@ def get_quart_app(
     site/environment in Google Analytics.
     :param coin_market_cap_api_key: API key for the Coin Market Cap API.
     :param hugging_face_access_token: Access token for the Hugging Face API.
-    :param aws_secret_access_key: Secret key for AWS
-    :param aws_access_key_id: Access key ID for AWS
-    :param aws_region: Region for AWS
-    :param sender_email_address: Address to place in "from" for emails
-    :param contact_us_recipients: Addresses to place in "to" for contact us emails
     :param promoted_persona_count: How many personas to present to the
                                     user upon starting a session.
-    :param feedback_recipients: Addresses to place in "to" for feedback emails
     :param tracing_config: Configuration for OpenTelemetry tracing.
     :return: Quart app
     """
@@ -128,23 +111,6 @@ def get_quart_app(
         agents=agents_,
     )
 
-    @app.before_serving
-    async def startup():
-        """Startup"""
-        session = aioboto3.Session(
-            region_name=aws_region,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-        )
-        app.ses_client = session.client("ses")
-        app.email_service = AWSSESEmailService(await app.ses_client.__aenter__())
-
-    @app.after_serving
-    async def shutdown():
-        """Shutdown"""
-        if hasattr(app, "ses_client"):
-            await app.ses_client.__aexit__(None, None, None)
-
     @app.get("/")
     async def index() -> str:
         """
@@ -159,118 +125,6 @@ def get_quart_app(
     async def ping() -> Response:
         """Liveness/readiness check endpoint"""
         return Response("PONG", 200, mimetype="text/text")
-
-    @app.post("/contact-us")
-    async def contact_us() -> Response:
-        """Contact form submission endpoint"""
-        try:
-            form_data = await request.form
-            contact_us_data = ContactUs(**form_data)
-            if contact_us_data.name:
-                app.logger.info("Honeypot field is filled")
-            else:
-                html, text = await asyncio.gather(
-                    render_template(
-                        "email_contact_us.html",
-                        name=contact_us_data.name_honeypot,
-                        email=contact_us_data.email_honeypot,
-                        message=contact_us_data.comments,
-                    ),
-                    render_template(
-                        "email_contact_us.txt",
-                        name=contact_us_data.name_honeypot,
-                        email=contact_us_data.email_honeypot,
-                        message=contact_us_data.comments,
-                    ),
-                )
-                await app.email_service.send_email(  # type: ignore[attr-defined]
-                    sender=sender_email_address,
-                    recipients=contact_us_recipients,
-                    subject=f"Contact Us Received from {contact_us_data.email_honeypot}",
-                    body_text=text,
-                    body_html=html,
-                )
-            return Response(None, 204)
-        except ValidationError as e:
-            return Response(e.json(indent=0), 400, mimetype="text/json")
-        except (BadRequest, TypeError):
-            return Response(
-                json.dumps(
-                    [
-                        {
-                            "loc": [],
-                            "msg": "An error occurred processing the request!",
-                        }
-                    ]
-                ),
-                400,
-                mimetype="text/json",
-            )
-        except DeliveryError as e:
-            app.logger.exception("Unable to send email for contact us", exc_info=e)
-            return Response(
-                json.dumps(
-                    [
-                        {
-                            "loc": [],
-                            "msg": "An error occurred completing the request!",
-                        }
-                    ]
-                ),
-                400,
-                mimetype="text/json",
-            )
-
-    @app.post("/feedback")
-    async def feedback() -> Response:
-        """Feedback submission endpoint"""
-        try:
-            form_data = await request.json
-            feedback_data = Feedback(**form_data)
-            html = await render_template(
-                "email_feedback.html",
-                question=feedback_data.question,
-                answer=feedback_data.answer,
-                message=feedback_data.message,
-                chat_history=feedback_data.chat_history,
-            )
-            await app.email_service.send_email(  # type: ignore[attr-defined]
-                sender=sender_email_address,
-                recipients=feedback_recipients,
-                subject="Feedback",
-                body_html=html,
-                body_text="",
-            )
-            return Response(None, 204)
-        except ValidationError as e:
-            return Response(e.json(indent=0), 400, mimetype="text/json")
-        except (BadRequest, TypeError):
-            return Response(
-                json.dumps(
-                    [
-                        {
-                            "loc": [],
-                            "msg": "An error occurred processing the request!",
-                        }
-                    ]
-                ),
-                400,
-                mimetype="text/json",
-            )
-        except DeliveryError as e:
-            app.logger.exception("Unable to send email for feedback", exc_info=e)
-            return Response(
-                json.dumps(
-                    [
-                        {
-                            "loc": [],
-                            "msg": "An error occurred completing the request!",
-                        }
-                    ]
-                ),
-                400,
-                mimetype="text/json",
-            )
 
     @app.websocket("/chat")
     async def ws() -> None:

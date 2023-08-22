@@ -17,7 +17,6 @@ dependencies = [
     "email-validator~=2.0",
     # Other Libraries
     "backoff~=2.2",
-    "aioboto3~=11.2",
     # APM
     "opentelemetry-sdk",
     "opentelemetry-exporter-otlp-proto-http",

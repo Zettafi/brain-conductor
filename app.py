@@ -3,7 +3,7 @@ QUart application WSGI module
 """
 import os
 
-from brain_conductor import get_quart_app, TracingConfig
+from brain_conductor import get_quart_app, TracingConfig, LogLevel
 from typing import Literal
 
 try:
@@ -34,23 +34,13 @@ def get_env_var(name: str, required: bool = True, default: str | None = None):
 
 
 openai_api_key = get_env_var("OPENAI_API_KEY")
-log_level = get_env_var("LOG_LEVEL", False, "ERROR").upper()
+log_level: str | LogLevel = get_env_var("LOG_LEVEL", False, "ERROR").upper()
 google_measurement_id: str | Literal[False] = os.getenv("GOOGLE_MEASUREMENT_ID", False)
 coin_market_cap_api_key = get_env_var("COIN_MARKET_CAP_API_KEY")
 hugging_face_access_token = get_env_var("HUGGING_FACE_ACCESS_TOKEN")
-aws_region = get_env_var("AWS_REGION")
-aws_access_key_id = get_env_var("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = get_env_var("AWS_SECRET_ACCESS_KEY")
-sender_email_address = get_env_var("SENDER_EMAIL_ADDRESS")
-contact_us_recipients = [
-    recipient.strip() for recipient in get_env_var("CONTACT_US_RECIPIENTS").split(",")
-]
 promoted_persona_count = int(
     get_env_var("PROMOTED_PERSONA_COUNT", required=False, default="3")
 )
-feedback_recipients = [
-    recipient.strip() for recipient in get_env_var("FEEDBACK_RECIPIENTS").split(",")
-]
 
 tracing_config = TracingConfig(
     enabled=True
@@ -71,12 +61,6 @@ app = get_quart_app(
     google_measurement_id=google_measurement_id,
     coin_market_cap_api_key=coin_market_cap_api_key,
     hugging_face_access_token=hugging_face_access_token,
-    aws_region=aws_region,
-    aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key,
-    sender_email_address=sender_email_address,
-    contact_us_recipients=contact_us_recipients,
     promoted_persona_count=promoted_persona_count,
-    feedback_recipients=contact_us_recipients,
     tracing_config=tracing_config,
 )
