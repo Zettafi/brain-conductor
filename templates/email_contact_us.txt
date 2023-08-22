@@ -1,9 +1,0 @@
-Contact Us
-==========
-
-Received Entry:
----------------
-
-Name:    {{ name }}
-Email:   {{ email }}
-Message: {{ message }}
