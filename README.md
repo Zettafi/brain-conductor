@@ -4,9 +4,35 @@
 
 ![Brain Conductor](brain-conductor.png)
 
-Brain Conductor is an interface for a multi-persona AI chatbot. 
+Brain Conductor is an interface for a multi-persona AI chatbot.
 
-It can be built and launched locally, or accessed live via: https://brain.chainconductor.io/
+## Overview
+
+Brain Conductor is an example of building an application using LLM chains. It does not
+use any libraries to accomplish the chaining so that it better exposes the concept and process. The
+basic components are personas which have domain specific knowledge and a router to orchestrate
+identifying which personas' have overlapping knowledge domains with the users question.
+
+### Router/Orchestration
+
+The initial chat request is handled by the `InquiryContextManager`. It takes the user
+message. the conversation history, and a prompt template to generate a chat prompt to
+send to an LLM, currently ChatGPT. This prompt's purpose is to determine the personas
+to which the user message will be sent. Once the personas are identified, their chains
+will be utilized to prepare an answer. 
+
+### Personas
+
+Personas are used to segment domain level knowledge, identify the LLM chain execute,
+and determine the voice of the response. Most chains are simple and generic which just
+simply use a General AI LLM and prompt template to generate a very generic response
+in the voice of the persona in a single LLM request. A few are more complicated. They
+translate the request into either an API or downstream LLM request. API requests use an
+LLM and prompt template to identify which API call would satisfy the request and the
+input data for that request. Downstream LLM requests use an LLM and prompt template to
+generate an LLM specific prompt to fulfill the request of the user. The results of the
+chains are then fed into another LLM to build the response in the appropriate voice of]
+the persona.
 
 ## Configuration
 

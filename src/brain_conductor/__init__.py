@@ -51,7 +51,7 @@ LogLevel = Literal[
 class TracingConfig:
     enabled: bool
     debug: bool
-    service_name: str
+    service_name: str | None
 
 
 def get_quart_app(

@@ -7,9 +7,7 @@ const messagesAwaitingResponse = [];
  * information about the event
  */
 function triggerEvent(event_name, event_parameters) {
-    if (typeof gtag === "undefined") {
-        console.error("No gtag for sending measurements!")
-    } else {
+    if (typeof gtag !== "undefined") {
         gtag("event", event_name, event_parameters);
     }
 }
