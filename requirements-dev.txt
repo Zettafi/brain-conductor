@@ -8,7 +8,7 @@ python-dotenv~=1.0
 pre-commit~=3.3
 
 # static analysis
-black~=23.3
+black~=24.3
 flake8~=6.0
 flake8-gl-codeclimate~=0.1
 mypy~=1.3
